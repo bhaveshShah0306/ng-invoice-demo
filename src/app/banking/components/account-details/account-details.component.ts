@@ -1,3 +1,5 @@
+// src/app/banking/components/account-details/account-details.component.ts
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,11 +17,7 @@ import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { Account, AccountType, AccountStatus, ACCOUNT_RULES } from '../../models/account.model';
 import { loadAccount, deleteAccount, checkBalance } from '../../store/account.actions';
-import { 
-  selectSelectedAccount, 
-  selectAccountsLoading, 
-  selectAccountError 
-} from '../../store/account.selectors';
+import { selectSelectedAccount, selectAccountsLoading, selectAccountError } from '../../store/account.selectors';
 
 @Component({
   selector: 'app-account-details',

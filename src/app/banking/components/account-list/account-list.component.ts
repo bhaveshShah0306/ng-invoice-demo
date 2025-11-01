@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinner, MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -31,7 +32,8 @@ import { selectAllAccounts, selectAccountsLoading } from '../../store/account.se
     MatIconModule,
     MatChipsModule,
     MatInputModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    MatProgressSpinner
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css'
