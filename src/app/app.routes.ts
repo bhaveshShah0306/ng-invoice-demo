@@ -16,6 +16,9 @@ import { NewproductComponent } from './common/newproduct/newproduct.component';
 import { MaskComponent } from './common/mask/mask.component';
 import { ListComponent } from './Invoice/list/list.component';
 import { AddinvoiceComponent } from './Invoice/addinvoice/addinvoice.component';
+import { AccountListComponent } from './banking/components/account-list/account-list.component';
+import { AccountCreateComponent } from './banking/components/account-create/account-create.component';
+import { AccountDetailsComponent } from './banking/components/account-details/account-details.component';
 
 export const routes: Routes = [
     {
@@ -74,5 +77,49 @@ export const routes: Routes = [
     },
     {
         path: '**', component: StatusComponent
-    }
+    }, // ============================================================================
+    // BANKING ROUTES (NEW - Protected)
+    // ============================================================================
+    {
+        path: 'banking',
+        canActivate: [authGuard],
+        children: [
+            {
+                path: '',
+                redirectTo: 'accounts',
+                pathMatch: 'full'
+            },
+            {
+                path: 'accounts',
+                component: AccountListComponent,
+                title: 'Accounts - Banking App'
+            },
+            {
+                path: 'create-account',
+                component: AccountCreateComponent,
+                title: 'Create Account - Banking App'
+            },
+            {
+                path: 'account/:id',
+                component: AccountDetailsComponent,
+                title: 'Account Details - Banking App'
+            }
+            // Future Routes:
+            // {
+            //     path: 'deposit/:accountId',
+            //     component: DepositComponent,
+            //     title: 'Deposit - Banking App'
+            // },
+            // {
+            //     path: 'withdraw/:accountId',
+            //     component: WithdrawComponent,
+            //     title: 'Withdraw - Banking App'
+            // },
+            // {
+            //     path: 'transactions/:accountId',
+            //     component: TransactionListComponent,
+            //     title: 'Transactions - Banking App'
+            // }
+        ]
+    },
 ];

@@ -1,3 +1,75 @@
-.example-spacer{
-    flex: 1 1 auto ;
+/* src/app/common/appmenu/appmenu.component.css */
+
+/* Spacer to push items to the right */
+.example-spacer {
+  flex: 1 1 auto;
+}
+
+/* Active link highlighting */
+.active-link {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid white;
+}
+
+/* Navigation button spacing */
+button[mat-button] {
+  margin: 0 4px;
+}
+
+/* Menu button with icon */
+button[mat-button] mat-icon {
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+/* Dropdown arrow icon */
+button[mat-button] mat-icon:last-child {
+  margin-left: 4px;
+  margin-right: 0;
+}
+
+/* User menu disabled item (username display) */
+[mat-menu-item][disabled] {
+  opacity: 1 !important;
+  cursor: default;
+  font-weight: 500;
+}
+
+/* Menu item icons */
+[mat-menu-item] mat-icon {
+  margin-right: 8px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+/* Hover effect for menu items */
+button[mat-menu-item]:not([disabled]):hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Disabled menu items (coming soon features) */
+button[mat-menu-item][disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  button[mat-button] span {
+    display: none;
+  }
+  
+  button[mat-button] mat-icon {
+    margin: 0;
+  }
+}
+
+/* Toolbar styling */
+mat-toolbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+/* Icon buttons spacing */
+button[mat-icon-button] {
+  margin-left: 8px;
 }

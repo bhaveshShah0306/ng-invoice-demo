@@ -12,10 +12,17 @@ import { provideEffects } from '@ngrx/effects';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { ProductReducer } from './_store/Product.Reducer';
 import { ProductEffect } from './_store/Product.Effects';
+import { AccountEffects } from './banking/store/account.effects';
+import { AccountReducer } from './banking/store/account.reducer';
+
+
 
 export const appConfig: ApplicationConfig = {
   providers: [provideExperimentalZonelessChangeDetection(), provideRouter(routes),
     provideAnimationsAsync(), provideHttpClient(withInterceptors([tokenInterceptor])), provideToastr({ closeButton: true, preventDuplicates: true }),
-     provideStore({'product':ProductReducer}), provideEffects([ProductEffect]), provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
+     provideStore({
+  'accounts': AccountReducer,
+  'product': ProductReducer  // Keep if still needed
+}), provideEffects([ProductEffect,AccountEffects]), provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
      provideEnvironmentNgxMask()]
 };

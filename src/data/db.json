@@ -139,5 +139,283 @@
       "id": "Zero",
       "perc": 0
     }
+  ],
+  "accounts": [
+    {
+      "id": 1,
+      "accountNumber": "ACC001234567",
+      "accountType": "SAVINGS",
+      "accountHolderName": "Ravi Krishna",
+      "email": "ravi.krishna@example.com",
+      "phone": "9876543210",
+      "balance": 15000,
+      "minBalance": 1000,
+      "status": "ACTIVE",
+      "createdDate": "2024-01-15T10:30:00.000Z",
+      "lastModifiedDate": "2024-11-01T08:45:00.000Z",
+      "monthlyServiceCharge": 0,
+      "interestRate": 4.5
+    },
+    {
+      "id": 2,
+      "accountNumber": "ACC001234568",
+      "accountType": "CURRENT",
+      "accountHolderName": "Ramesh Kannan",
+      "email": "ramesh.kannan@example.com",
+      "phone": "9876543211",
+      "balance": 25000,
+      "minBalance": 5000,
+      "overdraftLimit": 10000,
+      "status": "ACTIVE",
+      "createdDate": "2024-02-20T14:20:00.000Z",
+      "lastModifiedDate": "2024-11-01T09:15:00.000Z",
+      "monthlyServiceCharge": 500,
+      "interestRate": 0
+    },
+    {
+      "id": 3,
+      "accountNumber": "ACC001234569",
+      "accountType": "SAVINGS",
+      "accountHolderName": "Kishore Kumar",
+      "email": "kishore.kumar@example.com",
+      "phone": "9876543212",
+      "balance": 1500,
+      "minBalance": 1000,
+      "status": "ACTIVE",
+      "createdDate": "2024-03-10T11:00:00.000Z",
+      "lastModifiedDate": "2024-11-01T07:30:00.000Z",
+      "monthlyServiceCharge": 0,
+      "interestRate": 4.5
+    },
+    {
+      "id": 4,
+      "accountNumber": "ACC001234570",
+      "accountType": "CURRENT",
+      "accountHolderName": "Priya Sharma",
+      "email": "priya.sharma@example.com",
+      "phone": "9876543213",
+      "balance": 45000,
+      "minBalance": 5000,
+      "overdraftLimit": 10000,
+      "status": "ACTIVE",
+      "createdDate": "2024-04-05T09:45:00.000Z",
+      "lastModifiedDate": "2024-11-01T10:00:00.000Z",
+      "monthlyServiceCharge": 500,
+      "interestRate": 0
+    },
+    {
+      "id": 5,
+      "accountNumber": "ACC001234571",
+      "accountType": "SAVINGS",
+      "accountHolderName": "Amit Patel",
+      "email": "amit.patel@example.com",
+      "phone": "9876543214",
+      "balance": 8500,
+      "minBalance": 1000,
+      "status": "ACTIVE",
+      "createdDate": "2024-05-12T13:30:00.000Z",
+      "lastModifiedDate": "2024-11-01T11:20:00.000Z",
+      "monthlyServiceCharge": 0,
+      "interestRate": 4.5
+    },
+    {
+      "id": 6,
+      "accountNumber": "ACC001234572",
+      "accountType": "SAVINGS",
+      "accountHolderName": "Sunita Reddy",
+      "email": "sunita.reddy@example.com",
+      "phone": "9876543215",
+      "balance": 500,
+      "minBalance": 1000,
+      "status": "SUSPENDED",
+      "createdDate": "2024-06-18T16:00:00.000Z",
+      "lastModifiedDate": "2024-10-28T14:00:00.000Z",
+      "monthlyServiceCharge": 0,
+      "interestRate": 4.5
+    },
+    {
+      "id": 7,
+      "accountNumber": "ACC001234573",
+      "accountType": "CURRENT",
+      "accountHolderName": "Vijay Mehta",
+      "email": "vijay.mehta@example.com",
+      "phone": "9876543216",
+      "balance": 12000,
+      "minBalance": 5000,
+      "overdraftLimit": 10000,
+      "status": "CLOSED",
+      "createdDate": "2024-01-08T10:15:00.000Z",
+      "lastModifiedDate": "2024-10-15T15:30:00.000Z",
+      "monthlyServiceCharge": 500,
+      "interestRate": 0
+    }
+  ],
+  "transactions": [
+    {
+      "id": 1,
+      "accountId": 1,
+      "accountNumber": "ACC001234567",
+      "transactionType": "ACCOUNT_OPENING",
+      "amount": 15000,
+      "balanceBeforeTransaction": 0,
+      "balanceAfterTransaction": 15000,
+      "status": "COMPLETED",
+      "remarks": "Initial deposit for account opening",
+      "transactionDate": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "id": 2,
+      "accountId": 1,
+      "accountNumber": "ACC001234567",
+      "transactionType": "DEPOSIT",
+      "amount": 5000,
+      "balanceBeforeTransaction": 15000,
+      "balanceAfterTransaction": 20000,
+      "status": "COMPLETED",
+      "remarks": "Cash deposit",
+      "transactionDate": "2024-02-10T14:20:00.000Z"
+    },
+    {
+      "id": 3,
+      "accountId": 1,
+      "accountNumber": "ACC001234567",
+      "transactionType": "WITHDRAWAL",
+      "amount": 5000,
+      "balanceBeforeTransaction": 20000,
+      "balanceAfterTransaction": 15000,
+      "status": "COMPLETED",
+      "remarks": "ATM withdrawal",
+      "transactionDate": "2024-03-05T16:45:00.000Z"
+    },
+    {
+      "id": 4,
+      "accountId": 2,
+      "accountNumber": "ACC001234568",
+      "transactionType": "ACCOUNT_OPENING",
+      "amount": 25000,
+      "balanceBeforeTransaction": 0,
+      "balanceAfterTransaction": 25000,
+      "status": "COMPLETED",
+      "remarks": "Initial deposit for business account",
+      "transactionDate": "2024-02-20T14:20:00.000Z"
+    },
+    {
+      "id": 5,
+      "accountId": 2,
+      "accountNumber": "ACC001234568",
+      "transactionType": "SERVICE_CHARGE_DEBIT",
+      "amount": 500,
+      "balanceBeforeTransaction": 25500,
+      "balanceAfterTransaction": 25000,
+      "status": "COMPLETED",
+      "remarks": "Monthly service charge - October 2024",
+      "transactionDate": "2024-10-01T00:00:00.000Z"
+    },
+    {
+      "id": 6,
+      "accountId": 3,
+      "accountNumber": "ACC001234569",
+      "transactionType": "ACCOUNT_OPENING",
+      "amount": 1500,
+      "balanceBeforeTransaction": 0,
+      "balanceAfterTransaction": 1500,
+      "status": "COMPLETED",
+      "remarks": "Minimum deposit for savings account",
+      "transactionDate": "2024-03-10T11:00:00.000Z"
+    },
+    {
+      "id": 7,
+      "accountId": 3,
+      "accountNumber": "ACC001234569",
+      "transactionType": "INTEREST_CREDIT",
+      "amount": 45,
+      "balanceBeforeTransaction": 1500,
+      "balanceAfterTransaction": 1545,
+      "status": "COMPLETED",
+      "remarks": "Quarterly interest credit - Q2 2024",
+      "transactionDate": "2024-06-30T23:59:59.000Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "accountId": 3,
+      "accountNumber": "ACC001234569",
+      "type": "LOW_BALANCE",
+      "priority": "HIGH",
+      "title": "Low Balance Alert",
+      "message": "Your account balance (₹1500.00) is below the minimum required balance of ₹2000.00.",
+      "status": "UNREAD",
+      "metadata": {
+        "balance": 1500,
+        "threshold": 2000,
+        "actionRequired": true
+      },
+      "createdDate": "2024-11-01T08:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "accountId": 6,
+      "accountNumber": "ACC001234572",
+      "type": "ACCOUNT_SUSPENDED",
+      "priority": "CRITICAL",
+      "title": "Account Suspended",
+      "message": "Your account has been suspended. Reason: Balance below minimum for 30 days. Please contact support.",
+      "status": "UNREAD",
+      "metadata": {
+        "balance": 500,
+        "actionRequired": true,
+        "actionUrl": "/banking/support"
+      },
+      "createdDate": "2024-10-28T14:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "accountId": 2,
+      "accountNumber": "ACC001234568",
+      "type": "SERVICE_CHARGE_DEDUCTED",
+      "priority": "MEDIUM",
+      "title": "Service Charge Deducted",
+      "message": "Monthly service charge of ₹500.00 deducted. Current balance: ₹25000.00.",
+      "status": "READ",
+      "metadata": {
+        "amount": 500,
+        "balance": 25000
+      },
+      "createdDate": "2024-10-01T00:00:00.000Z",
+      "readDate": "2024-10-01T09:30:00.000Z"
+    },
+    {
+      "id": 4,
+      "accountId": 1,
+      "accountNumber": "ACC001234567",
+      "type": "DEPOSIT_SUCCESS",
+      "priority": "LOW",
+      "title": "Deposit Successful",
+      "message": "₹5000.00 deposited successfully. Current balance: ₹20000.00.",
+      "status": "READ",
+      "metadata": {
+        "transactionId": 2,
+        "amount": 5000,
+        "balance": 20000
+      },
+      "createdDate": "2024-02-10T14:20:00.000Z",
+      "readDate": "2024-02-10T15:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "accountId": 7,
+      "accountNumber": "ACC001234573",
+      "type": "ACCOUNT_CLOSED",
+      "priority": "HIGH",
+      "title": "Account Closed",
+      "message": "Your account ACC001234573 has been closed successfully.",
+      "status": "READ",
+      "metadata": {
+        "actionRequired": false
+      },
+      "createdDate": "2024-10-15T15:30:00.000Z",
+      "readDate": "2024-10-15T16:00:00.000Z"
+    }
   ]
 }

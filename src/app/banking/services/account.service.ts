@@ -3,9 +3,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map, retry } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { Environment } from '../../../environments/environment.interface';
+import { catchError, map, retry, delay } from 'rxjs/operators';
 
 import {
   Account,
@@ -15,35 +13,32 @@ import {
   CloseAccountResponse,
   BalanceCheckResponse,
   AccountType,
-  AccountStatus
+  AccountStatus,
+  ACCOUNT_RULES
 } from '../models/account.model';
 
 /**
- * Account Service
+ * Account Service - JSON Server Version
  * Handles all HTTP operations for banking accounts
- * Communicates with .NET 8 API backend
+ * Communicates with JSON Server (localhost:3000)
  */
 @Injectable({
   providedIn: 'root'
 })
 export class AccountService {
   
-  // API Base URL - can be configured in environment files
-  private readonly baseUrl: string;
+  // JSON Server Base URL
+  private readonly baseUrl = 'http://localhost:3000';
   
   // API Endpoints
   private readonly endpoints = {
-    accounts: '/api/accounts',
-    balance: (id: number) => `/api/accounts/${id}/balance`,
-    accountById: (id: number) => `/api/accounts/${id}`,
-    closeAccount: (id: number) => `/api/accounts/${id}`,
-    statistics: '/api/accounts/statistics'
+    accounts: `${this.baseUrl}/accounts`,
+    accountById: (id: number) => `${this.baseUrl}/accounts/${id}`,
+    transactions: `${this.baseUrl}/transactions`,
+    notifications: `${this.baseUrl}/notifications`
   };
 
-  constructor(private http: HttpClient) {
-    // Use BankingAPIUrl if available, otherwise fallback to APIUrl
-    this.baseUrl = (environment as any).BankingAPIUrl ?? environment.APIUrl ?? 'https://localhost:7143';
-  }
+  constructor(private http: HttpClient) {}
 
   // ============================================================================
   // GET OPERATIONS
@@ -51,26 +46,23 @@ export class AccountService {
 
   /**
    * Get all accounts
-   * GET /api/accounts
-   * @returns Observable<Account[]>
+   * GET http://localhost:3000/accounts
    */
   getAllAccounts(): Observable<Account[]> {
-    return this.http.get<Account[]>(`${this.baseUrl}${this.endpoints.accounts}`)
+    return this.http.get<Account[]>(this.endpoints.accounts)
       .pipe(
         map(accounts => this.transformAccountDates(accounts)),
-        retry(1), // Retry once on failure
+        retry(1),
         catchError(this.handleError)
       );
   }
 
   /**
    * Get account by ID
-   * GET /api/accounts/{id}
-   * @param accountId - Account ID
-   * @returns Observable<Account>
+   * GET http://localhost:3000/accounts/:id
    */
   getAccountById(accountId: number): Observable<Account> {
-    return this.http.get<Account>(`${this.baseUrl}${this.endpoints.accountById(accountId)}`)
+    return this.http.get<Account>(this.endpoints.accountById(accountId))
       .pipe(
         map(account => this.transformAccountDate(account)),
         catchError(this.handleError)
@@ -79,14 +71,12 @@ export class AccountService {
 
   /**
    * Get accounts by status
-   * GET /api/accounts?status={status}
-   * @param status - Account status filter
-   * @returns Observable<Account[]>
+   * GET http://localhost:3000/accounts?status=ACTIVE
    */
   getAccountsByStatus(status: AccountStatus): Observable<Account[]> {
     const params = new HttpParams().set('status', status);
     
-    return this.http.get<Account[]>(`${this.baseUrl}${this.endpoints.accounts}`, { params })
+    return this.http.get<Account[]>(this.endpoints.accounts, { params })
       .pipe(
         map(accounts => this.transformAccountDates(accounts)),
         catchError(this.handleError)
@@ -95,14 +85,12 @@ export class AccountService {
 
   /**
    * Get accounts by type
-   * GET /api/accounts?type={type}
-   * @param type - Account type filter
-   * @returns Observable<Account[]>
+   * GET http://localhost:3000/accounts?accountType=SAVINGS
    */
   getAccountsByType(type: AccountType): Observable<Account[]> {
-    const params = new HttpParams().set('type', type);
+    const params = new HttpParams().set('accountType', type);
     
-    return this.http.get<Account[]>(`${this.baseUrl}${this.endpoints.accounts}`, { params })
+    return this.http.get<Account[]>(this.endpoints.accounts, { params })
       .pipe(
         map(accounts => this.transformAccountDates(accounts)),
         catchError(this.handleError)
@@ -110,15 +98,13 @@ export class AccountService {
   }
 
   /**
-   * Get accounts by account holder name
-   * GET /api/accounts?search={name}
-   * @param searchTerm - Search term for account holder name
-   * @returns Observable<Account[]>
+   * Search accounts by account holder name
+   * GET http://localhost:3000/accounts?q=searchTerm
    */
   searchAccounts(searchTerm: string): Observable<Account[]> {
-    const params = new HttpParams().set('search', searchTerm);
+    const params = new HttpParams().set('q', searchTerm);
     
-    return this.http.get<Account[]>(`${this.baseUrl}${this.endpoints.accounts}`, { params })
+    return this.http.get<Account[]>(this.endpoints.accounts, { params })
       .pipe(
         map(accounts => this.transformAccountDates(accounts)),
         catchError(this.handleError)
@@ -131,37 +117,122 @@ export class AccountService {
 
   /**
    * Create a new account
-   * POST /api/accounts
-   * @param request - CreateAccountRequest
-   * @returns Observable<CreateAccountResponse>
+   * POST http://localhost:3000/accounts
    */
   createAccount(request: CreateAccountRequest): Observable<CreateAccountResponse> {
-    return this.http.post<CreateAccountResponse>(
-      `${this.baseUrl}${this.endpoints.accounts}`,
-      request,
-      this.getHttpOptions()
-    ).pipe(
-      map(response => ({
-        ...response,
-        account: this.transformAccountDate(response.account)
-      })),
-      catchError(this.handleError)
-    );
+    // Generate account number
+    const accountNumber = this.generateAccountNumber();
+    
+    // Determine account-specific properties based on type
+    const minBalance = request.accountType === AccountType.SAVINGS 
+      ? ACCOUNT_RULES.SAVINGS.MIN_BALANCE 
+      : ACCOUNT_RULES.CURRENT.MIN_BALANCE;
+    
+    const monthlyServiceCharge = request.accountType === AccountType.CURRENT 
+      ? ACCOUNT_RULES.CURRENT.MONTHLY_SERVICE_CHARGE 
+      : 0;
+    
+    const interestRate = request.accountType === AccountType.SAVINGS 
+      ? ACCOUNT_RULES.SAVINGS.INTEREST_RATE 
+      : 0;
+
+    // Build account object
+    const newAccount: Omit<Account, 'id'> = {
+      accountNumber,
+      accountType: request.accountType,
+      accountHolderName: request.accountHolderName,
+      email: request.email,
+      phone: request.phone,
+      balance: request.initialDeposit,
+      minBalance,
+      status: AccountStatus.ACTIVE,
+      createdDate: new Date(),
+      lastModifiedDate: new Date(),
+      monthlyServiceCharge,
+      interestRate,
+      // Add overdraft for current accounts
+      ...(request.accountType === AccountType.CURRENT && {
+        overdraftLimit: ACCOUNT_RULES.CURRENT.OVERDRAFT_LIMIT
+      })
+    };
+
+    return this.http.post<Account>(this.endpoints.accounts, newAccount)
+      .pipe(
+        delay(500), // Simulate network delay
+        map((account: Account) => ({
+          success: true,
+          message: `Account ${account.accountNumber} created successfully!`,
+          account: this.transformAccountDate(account)
+        })),
+        catchError(this.handleError)
+      );
   }
 
   /**
    * Check account balance
-   * POST /api/accounts/{id}/balance
-   * Alternative: GET /api/accounts/{id}/balance
-   * @param accountId - Account ID
-   * @returns Observable<BalanceCheckResponse>
+   * GET http://localhost:3000/accounts/:id
    */
   checkBalance(accountId: number): Observable<BalanceCheckResponse> {
-    return this.http.get<BalanceCheckResponse>(
-      `${this.baseUrl}${this.endpoints.balance(accountId)}`
-    ).pipe(
-      catchError(this.handleError)
-    );
+    return this.http.get<Account>(this.endpoints.accountById(accountId))
+      .pipe(
+        map(account => {
+          const threshold = account.accountType === AccountType.SAVINGS
+            ? ACCOUNT_RULES.SAVINGS.LOW_BALANCE_THRESHOLD
+            : ACCOUNT_RULES.CURRENT.LOW_BALANCE_THRESHOLD;
+          
+          const availableBalance = account.accountType === AccountType.CURRENT && account.overdraftLimit
+            ? account.balance + account.overdraftLimit
+            : account.balance;
+
+          return {
+            accountId: account.id,
+            accountNumber: account.accountNumber,
+            currentBalance: account.balance,
+            availableBalance,
+            isLowBalance: account.balance < threshold,
+            minBalanceRequired: account.minBalance
+          };
+        }),
+        catchError(this.handleError)
+      );
+  }
+
+  // ============================================================================
+  // PUT/PATCH OPERATIONS
+  // ============================================================================
+
+  /**
+   * Update account balance
+   * PATCH http://localhost:3000/accounts/:id
+   */
+  updateAccountBalance(accountId: number, newBalance: number): Observable<Account> {
+    const updates = {
+      balance: newBalance,
+      lastModifiedDate: new Date()
+    };
+
+    return this.http.patch<Account>(this.endpoints.accountById(accountId), updates)
+      .pipe(
+        map(account => this.transformAccountDate(account)),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Update account status
+   * PATCH http://localhost:3000/accounts/:id
+   */
+  updateAccountStatus(accountId: number, status: AccountStatus): Observable<Account> {
+    const updates = {
+      status,
+      lastModifiedDate: new Date()
+    };
+
+    return this.http.patch<Account>(this.endpoints.accountById(accountId), updates)
+      .pipe(
+        map(account => this.transformAccountDate(account)),
+        catchError(this.handleError)
+      );
   }
 
   // ============================================================================
@@ -170,26 +241,36 @@ export class AccountService {
 
   /**
    * Close an account
-   * DELETE /api/accounts/{id}
-   * @param accountId - Account ID to close
-   * @param reason - Reason for closing (optional)
-   * @returns Observable<CloseAccountResponse>
+   * For JSON Server: We update status to CLOSED instead of deleting
+   * PATCH http://localhost:3000/accounts/:id
    */
   closeAccount(accountId: number, reason: string = 'Customer request'): Observable<CloseAccountResponse> {
-    const request: CloseAccountRequest = {
-      accountId,
-      reason
+    const updates = {
+      status: AccountStatus.CLOSED,
+      lastModifiedDate: new Date()
     };
 
-    // Send reason as query parameter or in body based on API design
-    const params = new HttpParams().set('reason', reason);
+    return this.http.patch<Account>(this.endpoints.accountById(accountId), updates)
+      .pipe(
+        delay(300),
+        map(() => ({
+          success: true,
+          message: 'Account closed successfully',
+          closedDate: new Date()
+        })),
+        catchError(this.handleError)
+      );
+  }
 
-    return this.http.delete<CloseAccountResponse>(
-      `${this.baseUrl}${this.endpoints.closeAccount(accountId)}`,
-      { params }
-    ).pipe(
-      catchError(this.handleError)
-    );
+  /**
+   * Permanently delete account (use with caution)
+   * DELETE http://localhost:3000/accounts/:id
+   */
+  deleteAccount(accountId: number): Observable<void> {
+    return this.http.delete<void>(this.endpoints.accountById(accountId))
+      .pipe(
+        catchError(this.handleError)
+      );
   }
 
   // ============================================================================
@@ -198,27 +279,44 @@ export class AccountService {
 
   /**
    * Get account statistics
-   * GET /api/accounts/statistics
-   * @returns Observable with account statistics
+   * Calculated client-side from all accounts
    */
   getAccountStatistics(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}${this.endpoints.statistics}`)
-      .pipe(
-        catchError(this.handleError)
-      );
+    return this.getAllAccounts().pipe(
+      map(accounts => {
+        const active = accounts.filter(a => a.status === AccountStatus.ACTIVE);
+        const savings = accounts.filter(a => a.accountType === AccountType.SAVINGS);
+        const current = accounts.filter(a => a.accountType === AccountType.CURRENT);
+        
+        return {
+          totalAccounts: accounts.length,
+          activeAccounts: active.length,
+          closedAccounts: accounts.filter(a => a.status === AccountStatus.CLOSED).length,
+          suspendedAccounts: accounts.filter(a => a.status === AccountStatus.SUSPENDED).length,
+          savingsAccounts: savings.length,
+          currentAccounts: current.length,
+          totalBalance: active.reduce((sum, a) => sum + a.balance, 0)
+        };
+      })
+    );
   }
 
   /**
    * Get low balance accounts
-   * GET /api/accounts/low-balance
-   * @returns Observable<Account[]>
+   * Filter client-side based on thresholds
    */
   getLowBalanceAccounts(): Observable<Account[]> {
-    return this.http.get<Account[]>(`${this.baseUrl}${this.endpoints.accounts}/low-balance`)
-      .pipe(
-        map(accounts => this.transformAccountDates(accounts)),
-        catchError(this.handleError)
-      );
+    return this.getAllAccounts().pipe(
+      map(accounts => accounts.filter(account => {
+        if (account.status !== AccountStatus.ACTIVE) return false;
+        
+        const threshold = account.accountType === AccountType.SAVINGS
+          ? ACCOUNT_RULES.SAVINGS.LOW_BALANCE_THRESHOLD
+          : ACCOUNT_RULES.CURRENT.LOW_BALANCE_THRESHOLD;
+        
+        return account.balance < threshold;
+      }))
+    );
   }
 
   // ============================================================================
@@ -226,8 +324,16 @@ export class AccountService {
   // ============================================================================
 
   /**
+   * Generate unique account number
+   * Format: ACC + 9 random digits
+   */
+  private generateAccountNumber(): string {
+    const randomDigits = Math.floor(100000000 + Math.random() * 900000000);
+    return `ACC${randomDigits}`;
+  }
+
+  /**
    * Get HTTP options with headers
-   * @private
    */
   private getHttpOptions() {
     return {
@@ -239,8 +345,6 @@ export class AccountService {
 
   /**
    * Transform account dates from string to Date objects
-   * Handles single account
-   * @private
    */
   private transformAccountDate(account: Account): Account {
     return {
@@ -251,9 +355,7 @@ export class AccountService {
   }
 
   /**
-   * Transform account dates from string to Date objects
-   * Handles array of accounts
-   * @private
+   * Transform account dates for array
    */
   private transformAccountDates(accounts: Account[]): Account[] {
     return accounts.map(account => this.transformAccountDate(account));
@@ -261,7 +363,6 @@ export class AccountService {
 
   /**
    * Handle HTTP errors
-   * @private
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred';
@@ -272,23 +373,15 @@ export class AccountService {
     } else {
       // Backend returned an unsuccessful response code
       if (error.status === 0) {
-        errorMessage = 'Unable to connect to the server. Please check your network connection.';
+        errorMessage = 'Unable to connect to the server. Please ensure JSON Server is running on http://localhost:3000';
       } else if (error.status === 400) {
-        errorMessage = error.error?.message || 'Invalid request. Please check your input.';
-      } else if (error.status === 401) {
-        errorMessage = 'Unauthorized. Please login again.';
-      } else if (error.status === 403) {
-        errorMessage = 'You do not have permission to perform this action.';
+        errorMessage = 'Invalid request. Please check your input.';
       } else if (error.status === 404) {
-        errorMessage = error.error?.message || 'Account not found.';
-      } else if (error.status === 409) {
-        errorMessage = error.error?.message || 'Conflict. The account may already exist.';
-      } else if (error.status === 422) {
-        errorMessage = error.error?.message || 'Validation failed. Please check your input.';
+        errorMessage = 'Account not found.';
       } else if (error.status === 500) {
-        errorMessage = 'Internal server error. Please try again later.';
+        errorMessage = 'Server error. Please try again later.';
       } else {
-        errorMessage = error.error?.message || `Server Error: ${error.status} - ${error.statusText}`;
+        errorMessage = `Server Error: ${error.status} - ${error.statusText}`;
       }
     }
 
@@ -301,154 +394,31 @@ export class AccountService {
 
     return throwError(() => new Error(errorMessage));
   }
-
-  // ============================================================================
-  // VALIDATION HELPERS (Optional - Can be used in components)
-  // ============================================================================
-
-  /**
-   * Validate account holder name
-   * @param name - Account holder name
-   * @returns boolean
-   */
-  validateAccountHolderName(name: string): boolean {
-        if (!name) {
-      return false;
-    }
-    const trimmedName = name.trim();
-    return trimmedName.length >= 3 && trimmedName.length <= 100;
-  }
-
-  /**
-   * Validate email format
-   * @param email - Email address
-   * @returns boolean
-   */
-  validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  /**
-   * Validate phone number (10 digits)
-   * @param phone - Phone number
-   * @returns boolean
-   */
-  validatePhone(phone: string): boolean {
-    const phoneRegex = /^[0-9]{10}$/;
-    return phoneRegex.test(phone);
-  }
-
-  /**
-   * Validate initial deposit amount based on account type
-   * @param amount - Deposit amount
-   * @param accountType - Type of account
-   * @returns boolean
-   */
-  validateInitialDeposit(amount: number, accountType: AccountType): boolean {
-    if (accountType === AccountType.SAVINGS) {
-      return amount >= 1000; // ACCOUNT_RULES.SAVINGS.INITIAL_DEPOSIT_MIN
-    } else if (accountType === AccountType.CURRENT) {
-      return amount >= 5000; // ACCOUNT_RULES.CURRENT.INITIAL_DEPOSIT_MIN
-    }
-    return false;
-  }
-
-  // ============================================================================
-  // MOCK DATA (FOR DEVELOPMENT - Remove in production)
-  // ============================================================================
-
-  /**
-   * Get mock accounts for development/testing
-   * Remove this in production
-   * @returns Observable<Account[]>
-   */
-  getMockAccounts(): Observable<Account[]> {
-    const mockAccounts: Account[] = [
-      {
-        id: 1,
-        accountNumber: 'ACC001234567',
-        accountType: AccountType.SAVINGS,
-        accountHolderName: 'Ravi Krishna',
-        email: 'ravi.krishna@example.com',
-        phone: '9876543210',
-        balance: 15000,
-        minBalance: 1000,
-        status: AccountStatus.ACTIVE,
-        createdDate: new Date('2024-01-15'),
-        lastModifiedDate: new Date('2024-11-01'),
-        monthlyServiceCharge: 0,
-        interestRate: 4.5
-      },
-      {
-        id: 2,
-        accountNumber: 'ACC001234568',
-        accountType: AccountType.CURRENT,
-        accountHolderName: 'Ramesh Kannan',
-        email: 'ramesh.kannan@example.com',
-        phone: '9876543211',
-        balance: 25000,
-        minBalance: 5000,
-        overdraftLimit: 10000,
-        status: AccountStatus.ACTIVE,
-        createdDate: new Date('2024-02-20'),
-        lastModifiedDate: new Date('2024-11-01'),
-        monthlyServiceCharge: 500,
-        interestRate: 0
-      },
-      {
-        id: 3,
-        accountNumber: 'ACC001234569',
-        accountType: AccountType.SAVINGS,
-        accountHolderName: 'Kishore Kumar',
-        email: 'kishore.kumar@example.com',
-        phone: '9876543212',
-        balance: 1500,
-        minBalance: 1000,
-        status: AccountStatus.ACTIVE,
-        createdDate: new Date('2024-03-10'),
-        lastModifiedDate: new Date('2024-11-01'),
-        monthlyServiceCharge: 0,
-        interestRate: 4.5
-      }
-    ];
-
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next(mockAccounts);
-        observer.complete();
-      }, 500); // Simulate network delay
-    });
-  }
 }
 
 /**
- * Account Service
+ * USAGE WITH JSON SERVER:
  * 
- * Features:
- * - CRUD operations for bank accounts
- * - Balance checking and validation
- * - Account search and filtering
- * - Statistics and reporting
- * - Comprehensive error handling
- * - Mock data support for development
+ * 1. Start JSON Server:
+ *    json-server --watch src/data/db.json --port 3000
  * 
- * API Endpoints:
- * - GET    /api/accounts              - Get all accounts
- * - GET    /api/accounts/{id}         - Get account by ID
- * - POST   /api/accounts              - Create new account
- * - DELETE /api/accounts/{id}         - Close account
- * - GET    /api/accounts/{id}/balance - Check balance
+ * 2. Available Endpoints:
+ *    GET    http://localhost:3000/accounts              - Get all accounts
+ *    GET    http://localhost:3000/accounts/1            - Get account by ID
+ *    GET    http://localhost:3000/accounts?status=ACTIVE - Filter by status
+ *    POST   http://localhost:3000/accounts              - Create account
+ *    PATCH  http://localhost:3000/accounts/1            - Update account
+ *    DELETE http://localhost:3000/accounts/1            - Delete account
  * 
- * Usage in Components:
- * ```typescript
- * constructor(private accountService: AccountService) {}
+ * 3. Query Parameters:
+ *    ?status=ACTIVE                 - Filter by status
+ *    ?accountType=SAVINGS           - Filter by type
+ *    ?q=Ravi                        - Full-text search
+ *    ?_sort=balance&_order=desc     - Sort by balance descending
+ *    ?_page=1&_limit=10             - Pagination
  * 
- * loadAccounts() {
- *   this.accountService.getAllAccounts().subscribe(
- *     accounts => console.log(accounts),
- *     error => console.error(error)
- *   );
- * }
- * ```
+ * 4. Usage in Components:
+ *    this.accountService.getAllAccounts().subscribe(accounts => {
+ *      console.log(accounts);
+ *    });
  */
