@@ -21,64 +21,97 @@ import { AccountCreateComponent } from './banking/components/account-create/acco
 import { AccountDetailsComponent } from './banking/components/account-details/account-details.component';
 
 export const routes: Routes = [
+    // ============================================================================
+    // PUBLIC ROUTES (No Authentication Required)
+    // ============================================================================
     {
-        path: '', component: HomeComponent, canActivate: [authGuard]
+        path: 'login', 
+        component: LoginComponent
     },
     {
-        path: 'about', component: AboutComponent, canActivate: [authGuard]
+        path: 'register', 
+        component: RegisterComponent
     },
+
+    // ============================================================================
+    // PROTECTED ROUTES (Authentication Required)
+    // ============================================================================
     {
-        path: 'about/:submenu/:id', component: AboutComponent, canActivate: [authGuard]
-    },
-    {
-        path: 'login', component: LoginComponent
-    },
-    {
-        path: 'register', component: RegisterComponent
-    },
-    {
-        path: 'contact', loadComponent: () => import('./common/contact/contact.component').then(m => m.ContactComponent),
+        path: '', 
+        component: HomeComponent, 
         canActivate: [authGuard]
     },
     {
-        path: 'customer', component: CustomerComponent,
+        path: 'about', 
+        component: AboutComponent, 
+        canActivate: [authGuard]
+    },
+    {
+        path: 'about/:submenu/:id', 
+        component: AboutComponent, 
+        canActivate: [authGuard]
+    },
+    {
+        path: 'contact', 
+        loadComponent: () => import('./common/contact/contact.component').then(m => m.ContactComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: 'customer', 
+        component: CustomerComponent,
         canActivate: [authGuard],
         canActivateChild: [childauthGuard],
         canDeactivate: [authdGuard],
         children: [
             {
-                path: 'add', component: AddComponent, canActivate: [authGuard]
+                path: 'add', 
+                component: AddComponent, 
+                canActivate: [authGuard]
             },
             {
-                path: 'edit/:id', component: AddComponent
+                path: 'edit/:id', 
+                component: AddComponent
             }
         ]
     },
     {
-        path: 'product', component: ProductComponent,canActivate:[authGuard]
+        path: 'product', 
+        component: ProductComponent,
+        canActivate: [authGuard]
     },
     {
-        path: 'learn', component: LearnComponent
+        path: 'learn', 
+        component: LearnComponent,
+        canActivate: [authGuard]
     },
     {
-        path: 'productnew', component: NewproductComponent
+        path: 'productnew', 
+        component: NewproductComponent,
+        canActivate: [authGuard]
     },
     {
-        path: 'mask', component: MaskComponent
+        path: 'mask', 
+        component: MaskComponent,
+        canActivate: [authGuard]
     },
     {
-        path: 'invoice', component: ListComponent
+        path: 'invoice', 
+        component: ListComponent,
+        canActivate: [authGuard]
     },
     {
-        path: 'createinvoice', component: AddinvoiceComponent
+        path: 'createinvoice', 
+        component: AddinvoiceComponent,
+        canActivate: [authGuard]
     },
     {
-        path: 'editinvoice/:invoiceno', component: AddinvoiceComponent
+        path: 'editinvoice/:invoiceno', 
+        component: AddinvoiceComponent,
+        canActivate: [authGuard]
     },
-    {
-        path: '**', component: StatusComponent
-    }, // ============================================================================
-    // BANKING ROUTES (NEW - Protected)
+
+    // ============================================================================
+    // BANKING ROUTES (Protected)
     // ============================================================================
     {
         path: 'banking',
@@ -92,7 +125,7 @@ export const routes: Routes = [
             {
                 path: 'accounts',
                 component: AccountListComponent,
-                title: 'Accounts - Banking App'
+                title: 'My Accounts - Banking App'
             },
             {
                 path: 'create-account',
@@ -104,22 +137,14 @@ export const routes: Routes = [
                 component: AccountDetailsComponent,
                 title: 'Account Details - Banking App'
             }
-            // Future Routes:
-            // {
-            //     path: 'deposit/:accountId',
-            //     component: DepositComponent,
-            //     title: 'Deposit - Banking App'
-            // },
-            // {
-            //     path: 'withdraw/:accountId',
-            //     component: WithdrawComponent,
-            //     title: 'Withdraw - Banking App'
-            // },
-            // {
-            //     path: 'transactions/:accountId',
-            //     component: TransactionListComponent,
-            //     title: 'Transactions - Banking App'
-            // }
         ]
     },
+
+    // ============================================================================
+    // 404 PAGE - MUST BE LAST
+    // ============================================================================
+    {
+        path: '**', 
+        component: StatusComponent
+    }
 ];

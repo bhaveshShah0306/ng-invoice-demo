@@ -4,17 +4,93 @@
     </button>
     <span>{{service.Apptitle()}}</span>
     <span class="example-spacer"></span>
-    <button mat-button routerLink="">Home</button>
-    <button mat-button routerLink="about">About</button>
-    <button mat-button routerLink="contact">Conatct</button>
-    <button mat-button routerLink="customer">Customer</button>
-    <button mat-button routerLink="product">Product</button>
-    <button mat-button routerLink="login">Logout</button>
     
-    <button mat-icon-button class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
+    <!-- Main Navigation -->
+    <button mat-button routerLink="" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">
+      <mat-icon>home</mat-icon>
+      <span>Home</span>
+    </button>
+    
+    <button mat-button routerLink="about" routerLinkActive="active-link">
+      <mat-icon>info</mat-icon>
+      <span>About</span>
+    </button>
+    
+    <button mat-button routerLink="contact" routerLinkActive="active-link">
+      <mat-icon>contact_mail</mat-icon>
+      <span>Contact</span>
+    </button>
+    
+    <button mat-button routerLink="customer" routerLinkActive="active-link">
+      <mat-icon>people</mat-icon>
+      <span>Customer</span>
+    </button>
+    
+    <button mat-button routerLink="product" routerLinkActive="active-link">
+      <mat-icon>inventory_2</mat-icon>
+      <span>Product</span>
+    </button>
+
+    <!-- Banking Dropdown Menu -->
+    <button mat-button [matMenuTriggerFor]="bankingMenu" routerLinkActive="active-link">
+      <mat-icon>account_balance</mat-icon>
+      <span>Banking</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #bankingMenu="matMenu">
+      <button mat-menu-item routerLink="banking/accounts">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <span>My Accounts</span>
+      </button>
+      <button mat-menu-item routerLink="banking/create-account">
+        <mat-icon>add_circle</mat-icon>
+        <span>Create Account</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item disabled>
+        <mat-icon>swap_horiz</mat-icon>
+        <span>Transactions (Coming Soon)</span>
+      </button>
+      <button mat-menu-item disabled>
+        <mat-icon>receipt</mat-icon>
+        <span>Statements (Coming Soon)</span>
+      </button>
+    </mat-menu>
+
+    <!-- Invoice Menu -->
+    <button mat-button routerLink="invoice" routerLinkActive="active-link">
+      <mat-icon>receipt_long</mat-icon>
+      <span>Invoice</span>
+    </button>
+    
+    <span class="example-spacer"></span>
+    
+    <!-- User Menu -->
+    <button mat-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+      <span>{{ getUsername() }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item disabled>
+        <mat-icon>person</mat-icon>
+        <span>{{ getUsername() }}</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item routerLink="about">
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+    
+    <button mat-icon-button class="example-icon favorite-icon" aria-label="Favorites">
       <mat-icon>favorite</mat-icon>
     </button>
-    <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
+    <button mat-icon-button class="example-icon" aria-label="Share">
       <mat-icon>share</mat-icon>
     </button>
-  </mat-toolbar>
+</mat-toolbar>
