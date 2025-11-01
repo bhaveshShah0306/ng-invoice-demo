@@ -1,0 +1,65 @@
+/* src/app/banking/components/account-create/account-create.component.css */
+
+mat-card {
+  margin: 20px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.account-type-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.account-type-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.account-type-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.account-type-card.selected {
+  border-color: #3f51b5;
+  background-color: #e8eaf6;
+}
+
+.account-type-card mat-radio-button {
+  width: 100%;
+}
+
+.account-type-card h3 {
+  margin: 0;
+  color: #3f51b5;
+}
+
+.account-type-card ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.account-type-card li {
+  margin: 5px 0;
+}
+
+.mdc-button {
+  margin: 2px;
+}
+
+mat-icon {
+  vertical-align: middle;
+}
+
+mat-stepper {
+  margin-top: 20px;
+}

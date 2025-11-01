@@ -1,1 +1,205 @@
-<p>account-create works!</p>
+<!-- src/app/banking/components/account-create/account-create.component.html -->
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <div style="display: flex; align-items: center;">
+        <button mat-icon-button (click)="cancel()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h2 style="margin: 0 0 0 10px;">Create New Account</h2>
+      </div>
+    </mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (error$ | async; as error) {
+      <div style="background-color: #ffebee; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+        <mat-icon style="color: #d32f2f; vertical-align: middle;">error</mat-icon>
+        <span style="color: #d32f2f; margin-left: 10px;">{{ error }}</span>
+      </div>
+    }
+
+    <mat-stepper #stepper linear>
+      <!-- Step 1: Personal Information -->
+      <mat-step [stepControl]="personalInfoForm">
+        <form [formGroup]="personalInfoForm">
+          <ng-template matStepLabel>Personal Information</ng-template>
+          
+          <div style="padding: 20px;">
+            <mat-form-field class="full-width">
+              <mat-label>Full Name</mat-label>
+              <input matInput formControlName="accountHolderName" placeholder="Enter your full name">
+              <mat-icon matSuffix>person</mat-icon>
+              @if (personalInfoForm.get('accountHolderName')?.invalid && 
+                   personalInfoForm.get('accountHolderName')?.touched) {
+                <mat-error>{{ getErrorMessage(personalInfoForm, 'accountHolderName') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field class="full-width">
+              <mat-label>Email Address</mat-label>
+              <input matInput formControlName="email" placeholder="your.email@example.com" type="email">
+              <mat-icon matSuffix>email</mat-icon>
+              @if (personalInfoForm.get('email')?.invalid && 
+                   personalInfoForm.get('email')?.touched) {
+                <mat-error>{{ getErrorMessage(personalInfoForm, 'email') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field class="full-width">
+              <mat-label>Phone Number</mat-label>
+              <input matInput formControlName="phone" placeholder="10-digit mobile number" type="tel">
+              <mat-icon matSuffix>phone</mat-icon>
+              @if (personalInfoForm.get('phone')?.invalid && 
+                   personalInfoForm.get('phone')?.touched) {
+                <mat-error>{{ getErrorMessage(personalInfoForm, 'phone') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <div style="margin-top: 20px;">
+              <button mat-raised-button color="primary" matStepperNext>
+                Next
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 2: Account Type Selection -->
+      <mat-step [stepControl]="accountTypeForm">
+        <form [formGroup]="accountTypeForm">
+          <ng-template matStepLabel>Account Type</ng-template>
+          
+          <div style="padding: 20px;">
+            <mat-radio-group formControlName="accountType" class="account-type-group">
+              @for (type of accountTypes; track type.value) {
+                <mat-card class="account-type-card" 
+                          [class.selected]="accountTypeForm.value.accountType === type.value">
+                  <mat-radio-button [value]="type.value" style="width: 100%;">
+                    <div style="padding: 20px;">
+                      <h3>{{ type.label }}</h3>
+                      <mat-divider style="margin: 10px 0;"></mat-divider>
+                      
+                      @if (accountTypeForm.value.accountType === type.value) {
+                        <div style="margin-top: 15px;">
+                          <p><strong>Features:</strong></p>
+                          <ul>
+                            @for (feature of getAccountFeatures(); track feature) {
+                              <li>{{ feature }}</li>
+                            }
+                          </ul>
+                        </div>
+                      }
+                    </div>
+                  </mat-radio-button>
+                </mat-card>
+              }
+            </mat-radio-group>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+              <button mat-raised-button matStepperPrevious>
+                <mat-icon>arrow_back</mat-icon>
+                Back
+              </button>
+              <button mat-raised-button color="primary" matStepperNext 
+                      [disabled]="accountTypeForm.invalid">
+                Next
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 3: Initial Deposit -->
+      <mat-step [stepControl]="initialDepositForm">
+        <form [formGroup]="initialDepositForm">
+          <ng-template matStepLabel>Initial Deposit</ng-template>
+          
+          <div style="padding: 20px;">
+            @if (selectedAccountType) {
+              <div style="background-color: #e3f2fd; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <mat-icon style="color: #1976d2; vertical-align: middle;">info</mat-icon>
+                <span style="margin-left: 10px;">
+                  Minimum initial deposit required: <strong>₹{{ getMinDeposit() }}</strong>
+                </span>
+              </div>
+            }
+
+            <mat-form-field class="full-width">
+              <mat-label>Initial Deposit Amount</mat-label>
+              <input matInput formControlName="initialDeposit" 
+                     placeholder="Enter amount" type="number">
+              <span matPrefix>₹&nbsp;</span>
+              <mat-icon matSuffix>account_balance_wallet</mat-icon>
+              @if (initialDepositForm.get('initialDeposit')?.invalid && 
+                   initialDepositForm.get('initialDeposit')?.touched) {
+                <mat-error>{{ getErrorMessage(initialDepositForm, 'initialDeposit') }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Summary Card -->
+            @if (initialDepositForm.valid && selectedAccountType) {
+              <mat-card style="background-color: #f5f5f5; margin-top: 20px;">
+                <mat-card-header>
+                  <mat-card-title>Account Summary</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                      <strong>Account Holder:</strong><br>
+                      {{ personalInfoForm.value.accountHolderName }}
+                    </div>
+                    <div>
+                      <strong>Account Type:</strong><br>
+                      {{ accountTypeForm.value.accountType }}
+                    </div>
+                    <div>
+                      <strong>Email:</strong><br>
+                      {{ personalInfoForm.value.email }}
+                    </div>
+                    <div>
+                      <strong>Phone:</strong><br>
+                      {{ personalInfoForm.value.phone }}
+                    </div>
+                    <div>
+                      <strong>Initial Deposit:</strong><br>
+                      {{ initialDepositForm.value.initialDeposit | currency:'INR' }}
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+              <button mat-raised-button matStepperPrevious>
+                <mat-icon>arrow_back</mat-icon>
+                Back
+              </button>
+              <button mat-raised-button color="primary" 
+                      (click)="onSubmit()"
+                      [disabled]="personalInfoForm.invalid || 
+                                  accountTypeForm.invalid || 
+                                  initialDepositForm.invalid ||
+                                  (loading$ | async)">
+                @if (loading$ | async) {
+                  <mat-icon>hourglass_empty</mat-icon>
+                  Creating...
+                } @else {
+                  <mat-icon>check_circle</mat-icon>
+                  Create Account
+                }
+              </button>
+              <button mat-raised-button color="warn" (click)="cancel()">
+                <mat-icon>cancel</mat-icon>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </mat-step>
+    </mat-stepper>
+  </mat-card-content>
+</mat-card>
