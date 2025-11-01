@@ -248,6 +248,21 @@
       "lastModifiedDate": "2024-10-15T15:30:00.000Z",
       "monthlyServiceCharge": 500,
       "interestRate": 0
+    },
+    {
+      "id": "f1ef",
+      "accountNumber": "ACC374854091",
+      "accountType": "SAVINGS",
+      "accountHolderName": "Bhavesh Shah",
+      "email": "shah.k.bhavesh@gmail.com",
+      "phone": "1234567890",
+      "balance": 2000,
+      "minBalance": 1000,
+      "status": "ACTIVE",
+      "createdDate": "2025-11-01T06:35:23.531Z",
+      "lastModifiedDate": "2025-11-01T06:35:23.531Z",
+      "monthlyServiceCharge": 0,
+      "interestRate": 4.5
     }
   ],
   "transactions": [

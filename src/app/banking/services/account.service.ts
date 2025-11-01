@@ -17,11 +17,6 @@ import {
   ACCOUNT_RULES
 } from '../models/account.model';
 
-/**
- * Account Service - JSON Server Version
- * Handles all HTTP operations for banking accounts
- * Communicates with JSON Server (localhost:3000)
- */
 @Injectable({
   providedIn: 'root'
 })
@@ -40,14 +35,6 @@ export class AccountService {
 
   constructor(private http: HttpClient) {}
 
-  // ============================================================================
-  // GET OPERATIONS
-  // ============================================================================
-
-  /**
-   * Get all accounts
-   * GET http://localhost:3000/accounts
-   */
   getAllAccounts(): Observable<Account[]> {
     return this.http.get<Account[]>(this.endpoints.accounts)
       .pipe(
@@ -57,10 +44,6 @@ export class AccountService {
       );
   }
 
-  /**
-   * Get account by ID
-   * GET http://localhost:3000/accounts/:id
-   */
   getAccountById(accountId: number): Observable<Account> {
     return this.http.get<Account>(this.endpoints.accountById(accountId))
       .pipe(
@@ -69,10 +52,6 @@ export class AccountService {
       );
   }
 
-  /**
-   * Get accounts by status
-   * GET http://localhost:3000/accounts?status=ACTIVE
-   */
   getAccountsByStatus(status: AccountStatus): Observable<Account[]> {
     const params = new HttpParams().set('status', status);
     
@@ -83,10 +62,6 @@ export class AccountService {
       );
   }
 
-  /**
-   * Get accounts by type
-   * GET http://localhost:3000/accounts?accountType=SAVINGS
-   */
   getAccountsByType(type: AccountType): Observable<Account[]> {
     const params = new HttpParams().set('accountType', type);
     
@@ -97,10 +72,6 @@ export class AccountService {
       );
   }
 
-  /**
-   * Search accounts by account holder name
-   * GET http://localhost:3000/accounts?q=searchTerm
-   */
   searchAccounts(searchTerm: string): Observable<Account[]> {
     const params = new HttpParams().set('q', searchTerm);
     
@@ -111,14 +82,6 @@ export class AccountService {
       );
   }
 
-  // ============================================================================
-  // POST OPERATIONS
-  // ============================================================================
-
-  /**
-   * Create a new account
-   * POST http://localhost:3000/accounts
-   */
   createAccount(request: CreateAccountRequest): Observable<CreateAccountResponse> {
     // Generate account number
     const accountNumber = this.generateAccountNumber();

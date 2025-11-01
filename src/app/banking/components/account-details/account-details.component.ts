@@ -65,7 +65,7 @@ export class AccountDetailsComponent implements OnInit, OnDestroy {
       const id = params.get('id');
       if (id) {
         this.accountId = parseInt(id, 10);
-        this.store.dispatch(loadAccount({ accountId: this.accountId }));
+        this.store.dispatch(loadAccount({ accountId: this.accountId }));        
       }
     });
     

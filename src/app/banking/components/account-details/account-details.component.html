@@ -1,1 +1,355 @@
-<p>account-details works!</p>
+<div class="account-details-container">
+  <!-- Loading State -->
+  @if (loading$ | async) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading account details...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error$ | async; as error) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-content">
+          <mat-icon color="warn">error</mat-icon>
+          <div>
+            <h3>Error Loading Account</h3>
+            <p>{{ error }}</p>
+          </div>
+        </div>
+        <div class="error-actions">
+          <button mat-raised-button color="primary" (click)="refreshBalance()">
+            <mat-icon>refresh</mat-icon>
+            Try Again
+          </button>
+          <button mat-raised-button (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            Back to Accounts
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Account Details -->
+  @if (account$ | async; as account) {
+    <div class="account-details">
+      <!-- Header with Back Button -->
+      <div class="header-section">
+        <button mat-icon-button (click)="goBack()" class="back-button">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="header-content">
+          <h1>Account Details</h1>
+          <mat-chip-set>
+            <mat-chip [color]="getStatusColor(account.status)" highlighted>
+              <mat-icon>{{ account.status === AccountStatus.ACTIVE ? 'check_circle' : 'cancel' }}</mat-icon>
+              {{ account.status }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+
+      <!-- Account Overview Card -->
+      <mat-card class="overview-card">
+        <mat-card-header>
+          <mat-card-title>
+            <div class="account-header">
+              <!-- <mat-icon [color]="getAccountTypeColor(account.accountType)">
+                {{ getAccountTypeIcon(account.accountType) }}
+              </mat-icon> -->
+              <div>
+                <h2>{{ account.accountHolderName }}</h2>
+                <p class="account-number">{{ account.accountNumber }}</p>
+              </div>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <!-- Balance Section -->
+          <div class="balance-section">
+            <div class="balance-card main-balance">
+              <div class="balance-label">
+                <mat-icon>account_balance_wallet</mat-icon>
+                <span>Current Balance</span>
+              </div>
+              <div class="balance-amount" [class.low-balance]="isLowBalance(account)">
+                {{ account.balance | currency:'INR' }}
+              </div>
+              @if (isLowBalance(account)) {
+                <div class="low-balance-warning">
+                  <mat-icon>warning</mat-icon>
+                  <span>Below minimum balance</span>
+                </div>
+              }
+            </div>
+
+            @if (account.accountType === AccountType.CURRENT && account.overdraftLimit) {
+              <div class="balance-card">
+                <div class="balance-label">
+                  <mat-icon>credit_card</mat-icon>
+                  <span>Available Balance</span>
+                </div>
+                <div class="balance-amount available">
+                  {{ getAvailableBalance(account) | currency:'INR' }}
+                </div>
+                <div class="balance-info">
+                  <small>Includes ₹{{ account.overdraftLimit | number }} overdraft</small>
+                </div>
+              </div>
+            }
+
+            <div class="balance-actions">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                (click)="refreshBalance()"
+                [disabled]="!canPerformTransactions(account)">
+                <mat-icon>refresh</mat-icon>
+                Refresh Balance
+              </button>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Account Information Grid -->
+          <div class="info-grid">
+            <div class="info-item">
+              <mat-icon>person</mat-icon>
+              <div>
+                <span class="info-label">Account Holder</span>
+                <span class="info-value">{{ account.accountHolderName }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>account_balance</mat-icon>
+              <div>
+                <span class="info-label">Account Type</span>
+                <span class="info-value">{{ getAccountTypeLabel(account.accountType) }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>email</mat-icon>
+              <div>
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ account.email }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>phone</mat-icon>
+              <div>
+                <span class="info-label">Phone</span>
+                <span class="info-value">{{ account.phone }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>calendar_today</mat-icon>
+              <div>
+                <span class="info-label">Account Opened</span>
+                <span class="info-value">{{ account.createdDate | date:'mediumDate' }}</span>
+              </div>
+            </div>
+
+            <div class="info-item">
+              <mat-icon>update</mat-icon>
+              <div>
+                <span class="info-label">Last Updated</span>
+                <span class="info-value">{{ account.lastModifiedDate | date:'short' }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Account Features & Limits -->
+      <mat-card class="features-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>info</mat-icon>
+            Account Features & Limits
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list>
+            @for (feature of getAccountFeatures(account); track feature) {
+              <mat-list-item>
+                <mat-icon matListItemIcon>check_circle</mat-icon>
+                <span matListItemTitle>{{ feature }}</span>
+              </mat-list-item>
+              <mat-divider></mat-divider>
+            }
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Transaction Actions -->
+      @if (canPerformTransactions(account)) {
+        <mat-card class="actions-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>swap_horiz</mat-icon>
+              Quick Actions
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="action-buttons">
+              <button 
+                mat-raised-button 
+                color="primary" 
+                (click)="navigateToDeposit(account)"
+                class="action-button">
+                <mat-icon>add_circle</mat-icon>
+                <div>
+                  <span class="button-title">Deposit</span>
+                  <span class="button-subtitle">Add money</span>
+                </div>
+              </button>
+
+              <button 
+                mat-raised-button 
+                color="accent" 
+                (click)="navigateToWithdraw(account)"
+                class="action-button">
+                <mat-icon>remove_circle</mat-icon>
+                <div>
+                  <span class="button-title">Withdraw</span>
+                  <span class="button-subtitle">Take out money</span>
+                </div>
+              </button>
+
+              <button 
+                mat-raised-button 
+                (click)="navigateToTransactions(account)"
+                class="action-button">
+                <mat-icon>receipt_long</mat-icon>
+                <div>
+                  <span class="button-title">Transactions</span>
+                  <span class="button-subtitle">View history</span>
+                </div>
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <mat-card class="warning-card">
+          <mat-card-content>
+            <div class="warning-content">
+              <mat-icon color="warn">block</mat-icon>
+              <div>
+                <h3>Account {{ account.status }}</h3>
+                <p>Transactions are not available for this account.</p>
+                @if (account.status === AccountStatus.SUSPENDED) {
+                  <p>Please contact support to reactivate your account.</p>
+                }
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      <!-- Account Management -->
+      <mat-card class="management-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>settings</mat-icon>
+            Account Management
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list>
+            <mat-list-item>
+              <button 
+                mat-button 
+                (click)="navigateToTransactions(account)"
+                matListItemTitle>
+                <mat-icon matListItemIcon>history</mat-icon>
+                View Transaction History
+              </button>
+            </mat-list-item>
+            <mat-divider></mat-divider>
+
+            <mat-list-item>
+              <button mat-button disabled matListItemTitle>
+                <mat-icon matListItemIcon>settings</mat-icon>
+                Account Settings (Coming Soon)
+              </button>
+            </mat-list-item>
+            <mat-divider></mat-divider>
+
+            <mat-list-item>
+              <button mat-button disabled matListItemTitle>
+                <mat-icon matListItemIcon>description</mat-icon>
+                Download Statement (Coming Soon)
+              </button>
+            </mat-list-item>
+            <mat-divider></mat-divider>
+
+            <mat-list-item>
+              <button 
+                mat-button 
+                color="warn"
+                (click)="closeAccount(account)"
+                [disabled]="account.status !== AccountStatus.ACTIVE"
+                matListItemTitle>
+                <mat-icon matListItemIcon>cancel</mat-icon>
+                Close Account
+              </button>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Account Summary Stats -->
+      <mat-card class="stats-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>analytics</mat-icon>
+            Account Summary
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <mat-icon>account_balance</mat-icon>
+              <div>
+                <span class="stat-value">{{ account.balance | currency:'INR' }}</span>
+                <span class="stat-label">Current Balance</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <mat-icon>trending_up</mat-icon>
+              <div>
+                <span class="stat-value">{{ account.interestRate }}%</span>
+                <span class="stat-label">Interest Rate</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <mat-icon>payments</mat-icon>
+              <div>
+                <span class="stat-value">{{ account.monthlyServiceCharge | currency:'INR' }}</span>
+                <span class="stat-label">Monthly Charge</span>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <mat-icon>savings</mat-icon>
+              <div>
+                <span class="stat-value">{{ account.minBalance | currency:'INR' }}</span>
+                <span class="stat-label">Min Balance</span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>
