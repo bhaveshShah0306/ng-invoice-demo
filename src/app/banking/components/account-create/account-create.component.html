@@ -185,10 +185,14 @@
                                   initialDepositForm.invalid ||
                                   (loading$ | async)">
                 @if (loading$ | async) {
-                  <mat-icon>hourglass_empty</mat-icon>
+                  <ng-container >
+                    <mat-icon>hourglass_empty</mat-icon>
+                  </ng-container>
                   Creating...
                 } @else {
-                  <mat-icon>check_circle</mat-icon>
+                  <ng-container >
+                    <mat-icon>check_circle</mat-icon>
+                  </ng-container>
                   Create Account
                 }
               </button>
